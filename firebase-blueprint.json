@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "Inspection": {
+      "title": "Inspection",
+      "description": "Comprehensive safety inspection record for General Cargo, Petroleum V2, or Acid Tanker vehicles.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique inspection record ID" },
+        "module": { "type": "string", "enum": ["general", "petroleum_v2", "acid"], "description": "Type of vehicle inspection module" },
+        "truckNo": { "type": "string", "description": "Truck registration number" },
+        "trailerNo": { "type": "string", "description": "Trailer registration number" },
+        "inspectedBy": { "type": "string", "description": "Name of the inspector who conducted the audit" },
+        "driverName": { "type": "string", "description": "Name of the vehicle driver" },
+        "location": { "type": "string", "description": "Location or depot where audit occurred" },
+        "odometer": { "type": "string", "description": "Vehicle odometer reading" },
+        "jobCard": { "type": "string", "description": "Job card or work order reference" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "ISO timestamp of the inspection" },
+        "rate": { "type": "number", "description": "Overall condition rating (1 to 5)" },
+        "safeToLoad": { "type": "string", "enum": ["Yes", "No", "N/A"], "description": "Fitness verdict" },
+        "remarks": { "type": "string", "description": "Observations and remarks" },
+        "inspectorSignature": { "type": "string", "description": "Base64 inspector signature" },
+        "driverSignature": { "type": "string", "description": "Base64 driver signature" },
+        "photoFront": { "type": "string", "description": "Front photo base64 or URL" },
+        "photoLS": { "type": "string", "description": "Left side photo" },
+        "photoRS": { "type": "string", "description": "Right side photo" },
+        "photoBack": { "type": "string", "description": "Rear photo" },
+        "photoDamage": { "type": "string", "description": "Damage photo" },
+        "requestId": { "type": "string", "description": "Linked inspection request ID if initiated from dispatch" },
+        "syncedToSheet": { "type": "boolean", "description": "Flag indicating whether record has backed up to Google Sheet" },
+        "sheetSyncAt": { "type": "string", "description": "Timestamp when backup to sheet completed" },
+        "createdAt": { "type": "string", "description": "Record creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Record last update timestamp" }
+      },
+      "required": ["id", "module", "truckNo", "inspectedBy", "timestamp"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Application user account with role-based access control and preferences.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "User identifier" },
+        "username": { "type": "string", "description": "Unique username / login handle" },
+        "name": { "type": "string", "description": "Full name" },
+        "role": { "type": "string", "enum": ["SuperAdmin", "Admin", "Inspector", "Operations", "Maintenance", "Other"], "description": "Assigned access role" },
+        "position": { "type": "string", "description": "Operational job position" },
+        "password": { "type": "string", "description": "Stored authentication credential" },
+        "isActive": { "type": "boolean", "description": "Account active status" },
+        "needsSetup": { "type": "boolean", "description": "Whether onboarding wizard is required" },
+        "preferences": { "type": "object", "description": "User alert and UI preferences" },
+        "lastLogin": { "type": "string", "description": "Last session login timestamp" },
+        "createdAt": { "type": "string", "description": "Registration timestamp" },
+        "updatedAt": { "type": "string", "description": "Profile modification timestamp" }
+      },
+      "required": ["username", "name", "role"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Global fleet management and portal configuration.",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string", "description": "Organization name" },
+        "managerEmail": { "type": "string", "description": "Primary manager notification email" },
+        "companyLogo": { "type": "string", "description": "Base64 or URL for company branding logo" },
+        "webAppUrl": { "type": "string", "description": "Deployed application URL" },
+        "mobileApkLink": { "type": "string", "description": "Mobile APK download link" },
+        "templates": { "type": "object", "description": "Document header configuration per module" },
+        "enabledModules": { "type": "object", "description": "Module enable/disable toggles" },
+        "backupSpreadsheetUrl": { "type": "string", "description": "Backup Google Apps Script / Sheet URL" },
+        "updatedAt": { "type": "string", "description": "Last modified timestamp" }
+      },
+      "required": ["companyName"]
+    },
+    "InspectionRequest": {
+      "title": "InspectionRequest",
+      "description": "Request for vehicle safety audit submitted by driver or fleet dispatch.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Request identifier" },
+        "truckNo": { "type": "string", "description": "Truck registration" },
+        "trailerNo": { "type": "string", "description": "Trailer registration" },
+        "type": { "type": "string", "enum": ["general", "petroleum_v2", "acid"], "description": "Requested inspection type" },
+        "requester": { "type": "string", "description": "Name of the person requesting" },
+        "role": { "type": "string", "description": "Role of requester" },
+        "reason": { "type": "string", "description": "Reason for inspection" },
+        "priority": { "type": "string", "enum": ["low", "normal", "urgent"], "description": "Urgency level" },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "cancelled"], "description": "Dispatch status" },
+        "timestamp": { "type": "string", "description": "Submission timestamp" },
+        "completedInspectionId": { "type": "string", "description": "Reference to completed inspection" },
+        "syncedToSheet": { "type": "boolean", "description": "Backup status to spreadsheet" }
+      },
+      "required": ["id", "truckNo", "type", "requester", "status"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "System alerts and broadcast notices.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Notification identifier" },
+        "title": { "type": "string", "description": "Notice headline" },
+        "message": { "type": "string", "description": "Notice message body" },
+        "type": { "type": "string", "enum": ["critical", "warning", "success", "info"], "description": "Severity type" },
+        "timestamp": { "type": "string", "description": "Creation timestamp" },
+        "module": { "type": "string", "description": "Associated module" },
+        "read": { "type": "boolean", "description": "Read status" },
+        "readBy": { "type": "array", "description": "List of usernames who acknowledged" }
+      },
+      "required": ["id", "title", "message", "type", "timestamp"]
+    },
+    "FleetRegistry": {
+      "title": "FleetRegistry",
+      "description": "Master fleet asset lists for trucks, trailers, drivers, inspectors, and locations.",
+      "type": "object",
+      "properties": {
+        "trucks": { "type": "array", "description": "List of truck registration numbers" },
+        "trailers": { "type": "array", "description": "List of trailer registration numbers" },
+        "drivers": { "type": "array", "description": "List of driver names" },
+        "inspectors": { "type": "array", "description": "List of qualified inspectors" },
+        "locations": { "type": "array", "description": "List of operational depot locations" },
+        "positions": { "type": "array", "description": "List of operational positions" },
+        "updatedAt": { "type": "string", "description": "Timestamp of last registry sync" }
+      }
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "User support inquiries, equipment issue tickets, and messaging threads.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Ticket document ID" },
+        "ticketId": { "type": "string", "description": "Display ticket reference number" },
+        "subject": { "type": "string", "description": "Ticket summary subject" },
+        "description": { "type": "string", "description": "Detailed explanation of inquiry" },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"], "description": "Urgency priority level" },
+        "status": { "type": "string", "enum": ["Open", "In Progress", "Resolved", "Closed"], "description": "Resolution status" },
+        "user": { "type": "string", "description": "Full name of submitting user" },
+        "email": { "type": "string", "description": "Username or email of submitter" },
+        "role": { "type": "string", "description": "Role of submitting user" },
+        "timestamp": { "type": "string", "description": "Creation timestamp" },
+        "comments": { "type": "array", "description": "List of comment response objects" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["ticketId", "subject", "user"]
+    }
+  },
+  "firestore": {
+    "/inspections/{inspectionId}": {
+      "schema": "Inspection",
+      "description": "All vehicle safety inspection reports across General, Petro V2, and Acid Tanker modules."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Application user credentials, profile information, and RBAC roles."
+    },
+    "/settings/{settingId}": {
+      "schema": "SystemSettings",
+      "description": "System configuration, branding logos, template versions, and module toggles."
+    },
+    "/requests/{requestId}": {
+      "schema": "InspectionRequest",
+      "description": "Driver and dispatch inspection requests tracking."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "AppNotification",
+      "description": "System alerts and broadcast announcements."
+    },
+    "/fleet_registry/{registryId}": {
+      "schema": "FleetRegistry",
+      "description": "Cached fleet assets and dropdown validation items."
+    },
+    "/support_tickets/{ticketId}": {
+      "schema": "SupportTicket",
+      "description": "Customer support tickets, maintenance reports, and communication threads."
+    }
+  }
+}

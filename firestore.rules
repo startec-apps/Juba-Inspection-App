@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Inspections Collection
+    match /inspections/{inspectionId} {
+      allow read: if true;
+      allow create: if isValidId(inspectionId)
+        && request.resource.data.keys().hasAll(['id', 'module', 'truckNo', 'inspectedBy', 'timestamp'])
+        && request.resource.data.module in ['general', 'petroleum_v2', 'acid'];
+      allow update: if isValidId(inspectionId)
+        && request.resource.data.id == resource.data.id;
+      allow delete: if isValidId(inspectionId);
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isValidId(userId)
+        && request.resource.data.keys().hasAll(['username', 'name', 'role']);
+      allow update: if isValidId(userId);
+      allow delete: if false;
+    }
+
+    // System Settings Collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update: if isValidId(settingId);
+      allow delete: if false;
+    }
+
+    // Requests Collection
+    match /requests/{requestId} {
+      allow read: if true;
+      allow create: if isValidId(requestId)
+        && request.resource.data.keys().hasAll(['id', 'truckNo', 'type', 'requester', 'status']);
+      allow update: if isValidId(requestId);
+      allow delete: if true;
+    }
+
+    // Notifications Collection
+    match /notifications/{notificationId} {
+      allow read: if true;
+      allow create: if isValidId(notificationId)
+        && request.resource.data.keys().hasAll(['id', 'title', 'message', 'type', 'timestamp']);
+      allow update: if isValidId(notificationId);
+      allow delete: if true;
+    }
+
+    // Fleet Registry Collection
+    match /fleet_registry/{registryId} {
+      allow read: if true;
+      allow create, update: if isValidId(registryId);
+      allow delete: if false;
+    }
+
+    // Support Tickets Collection
+    match /support_tickets/{ticketId} {
+      allow read: if true;
+      allow create, update: if isValidId(ticketId);
+      allow delete: if false;
+    }
+
+    // Connection testing endpoint
+    match /test/{testId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,40 @@
+
+{
+  "short_name": "SafetyCheck",
+  "name": "SafetyCheck Pro Inspection",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/lucide-react/lucide/main/icons/shield-check.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/lucide-react/lucide/main/icons/shield-check.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "General Inspection",
+      "short_name": "General",
+      "description": "Start a new General Vehicle Inspection",
+      "url": "./?action=general",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/716/716766.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Petroleum Inspection",
+      "short_name": "Petroleum",
+      "description": "Start a new Petroleum Inspection",
+      "url": "./?action=petroleum",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/716/716766.png", "sizes": "192x192" }]
+    }
+  ]
+}
