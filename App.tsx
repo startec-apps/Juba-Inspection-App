@@ -33,6 +33,7 @@ import SubmissionOverlay from './components/ui/SubmissionOverlay';
 import SystemTour from './components/ui/SystemTour'; 
 import InstallPwaPrompt from './components/ui/InstallPwaPrompt';
 import UpdatePrompt from './components/ui/UpdatePrompt';
+import UpdateBanner from './components/ui/UpdateBanner';
 import AppBadge from './components/ui/AppBadge';
 import WhatsNewModal from './components/ui/WhatsNewModal';
 import VersionTag from './components/ui/VersionTag';
@@ -556,6 +557,7 @@ const App = () => {
   if (!currentUser) {
       return (
           <>
+            <UpdateBanner />
             <InstallPwaPrompt />
             <UpdatePrompt />
             <AppBadge notifications={notifications} />
@@ -571,6 +573,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 relative">
+      <UpdateBanner />
       <UpdatePrompt />
       <AppBadge notifications={notifications} />
       <WhatsNewModal />
