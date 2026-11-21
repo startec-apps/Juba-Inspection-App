@@ -258,51 +258,47 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
       : null;
 
   return (
-    <div className="h-[100dvh] w-full bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 overflow-hidden">
-      
-      {/* Brand Panel: Compact top bar on mobile, structured light architectural sidebar on desktop */}
-      <aside className="w-full md:w-[38%] lg:w-[35%] bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/40 px-4 py-3 md:p-10 lg:p-12 flex flex-col justify-between shrink-0 border-b border-slate-200 md:border-b-0 md:border-r">
-        <div className="flex md:flex-col items-center md:items-start justify-between md:justify-start gap-3">
-          <div className="bg-slate-200/70 border border-slate-300/60 px-2.5 py-1.5 md:p-3 rounded-lg md:rounded-xl inline-flex items-center shadow-2xs shrink-0">
-             {validCompanyLogo && !logoError ? (
-                <img src={validCompanyLogo} alt="Company Logo" referrerPolicy="no-referrer" className="h-6 md:h-9 w-auto object-contain" onError={() => setLogoError(true)} />
-             ) : (
-                <div className="flex items-center gap-1.5 px-1">
-                    <svg className="w-5 h-5 md:w-6 md:h-6 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span className="font-bold text-slate-900 text-base md:text-lg tracking-tight">Scbc</span>
-                </div>
-             )}
+    <div className="h-[100dvh] w-full bg-gradient-to-b from-slate-100/80 via-slate-50 to-slate-100/80 flex flex-col font-sans text-slate-800 overflow-y-auto px-4 py-4 sm:p-6">
+      <main className="w-full max-w-[410px] mx-auto my-auto flex flex-col items-center">
+        {/* Centered Unified Brand Header */}
+        <header className="flex flex-col items-center text-center mb-4 sm:mb-6">
+          <div className="bg-slate-200/70 border border-slate-300/60 px-3.5 py-2 rounded-xl inline-flex items-center justify-center shadow-2xs">
+            {validCompanyLogo && !logoError ? (
+              <img
+                src={validCompanyLogo}
+                alt="Company Logo"
+                referrerPolicy="no-referrer"
+                className="h-8 sm:h-10 w-auto object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="flex items-center gap-1.5 px-1">
+                <svg className="w-6 h-6 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span className="font-bold text-slate-900 text-lg tracking-tight">Scbc</span>
+              </div>
+            )}
           </div>
-          
-          <div className="md:mt-10 text-right md:text-left min-w-0">
-            <h1 className="text-sm sm:text-base md:text-2xl font-bold text-slate-900 leading-tight tracking-tight truncate md:whitespace-normal">
-                {settings.companyName || 'Fleet Portal'}
-            </h1>
-            <p className="text-slate-500 font-medium tracking-wider uppercase text-[10px] md:text-xs md:mt-1.5">
-                Fleet Inspection System
+
+          <h1 className="mt-2.5 sm:mt-3 text-lg sm:text-xl font-bold text-slate-900 leading-tight tracking-tight">
+            {settings.companyName || 'Fleet Portal'}
+          </h1>
+          <p className="text-slate-500 font-medium tracking-wider uppercase text-[10px] sm:text-[11px] mt-0.5">
+            Fleet Inspection System
+          </p>
+        </header>
+
+        {/* Centered Sign-In Card */}
+        <div className="w-full bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5 sm:p-7">
+          <div className="mb-4 sm:mb-5 text-center">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+              {isRegistering ? 'Setup Admin' : 'Sign In'}
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+              {isRegistering ? 'Create your master account.' : 'Access your inspection portal.'}
             </p>
           </div>
-        </div>
-
-        <div className="hidden md:block pt-5 border-t border-slate-200/80">
-            <span className="text-xs text-slate-400 tracking-wide">© Scbc 2026</span>
-        </div>
-      </aside>
-
-      {/* Form Panel */}
-      <main className="flex-1 min-h-0 flex flex-col bg-slate-50 overflow-y-auto px-4 py-3 sm:p-6 md:p-10">
-        <div className="w-full max-w-[400px] mx-auto my-auto">
-          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5 sm:p-8">
-            <div className="mb-4 sm:mb-6 text-center md:text-left">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                {isRegistering ? 'Setup Admin' : 'Sign In'}
-              </h2>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                {isRegistering ? 'Create your master account.' : 'Access your inspection portal.'}
-              </p>
-            </div>
 
             {error && (
               <div role="alert" className={`mb-3 sm:mb-5 px-3.5 py-2.5 rounded-xl text-xs font-medium border animate-fadeIn
@@ -456,9 +452,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                   </p>
               )}
             </form>
-          </div>
-          <p className="md:hidden text-center text-[11px] text-slate-400 mt-3">© Scbc 2026</p>
         </div>
+
+        <footer className="mt-4 text-center">
+          <span className="text-[11px] text-slate-400 tracking-wide">© Scbc 2026</span>
+        </footer>
       </main>
     </div>
   );
