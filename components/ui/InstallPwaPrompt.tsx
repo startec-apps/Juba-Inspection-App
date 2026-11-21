@@ -52,7 +52,6 @@ const InstallPwaPrompt = () => {
             setIsVisible(true);
         };
 
-        // Some browsers fire before we attach; also show after a short delay if event didn't fire but app is installable
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -79,11 +78,11 @@ const InstallPwaPrompt = () => {
                 <div className="flex items-start gap-4">
                     <div className="bg-white p-1 rounded-xl shrink-0">
                         <img
-                            src="/Juba-Inspection-App/pwa-192x192.png"
+                            src="/pwa-192x192.png"
                             alt="Juba Pro"
                             className="w-10 h-10 object-contain rounded-lg"
                             onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = '/Juba-Inspection-App/apple-touch-icon.png';
+                                (e.currentTarget as HTMLImageElement).src = '/apple-touch-icon.png';
                             }}
                         />
                     </div>

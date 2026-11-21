@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 export default defineConfig({
-  base: '/Juba-Inspection-App/',
+  base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
@@ -31,7 +31,7 @@ export default defineConfig({
         type: 'module'
       },
       manifest: {
-        id: '/Juba-Inspection-App/',
+        id: '/',
         name: 'Juba Transport',
         short_name: 'Juba Transport',
         description: 'Professional Truck & Trailer Inspection App with AI-powered analysis, PDF generation, and Google Sheets integration.',
@@ -39,8 +39,8 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/Juba-Inspection-App/',
-        scope: '/Juba-Inspection-App/',
+        start_url: '/',
+        scope: '/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
