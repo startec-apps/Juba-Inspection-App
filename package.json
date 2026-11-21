@@ -7,8 +7,7 @@
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "npm run build && rmdir /s /q docs 2>nul & xcopy dist docs /E /I /Y & git add docs & git commit -m \"Deploy update\" & git push"
   },
   "dependencies": {
     "@google/genai": "^1.31.0",
