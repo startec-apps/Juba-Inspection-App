@@ -241,208 +241,211 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
     }
   };
 
-  const isUrlValid = appScriptUrl && appScriptUrl.startsWith('https://script.google.com');
   const canSubmit = !isLoading && username.trim().length > 0;
 
   return (
-    <div className="h-screen w-full bg-slate-100 flex flex-col md:flex-row font-sans text-slate-700 overflow-hidden">
+    <div className="h-[100dvh] w-full bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 overflow-hidden">
       
-      {/* Brand Panel */}
-      <div className="w-full md:w-[35%] lg:w-[30%] bg-slate-900 p-6 md:p-12 flex flex-col justify-between shrink-0 border-b md:border-none shadow-xl z-10">
-        <div className="flex md:block items-center justify-between">
-          <div className="bg-white p-2 rounded-xl inline-block shadow-sm">
+      {/* Brand Panel: Compact top bar on mobile, structured sidebar on desktop */}
+      <aside className="w-full md:w-[38%] lg:w-[35%] bg-slate-900 px-4 py-3 md:p-10 lg:p-12 flex flex-col justify-between shrink-0 border-b border-slate-800 md:border-b-0 md:border-r">
+        <div className="flex md:flex-col items-center md:items-start justify-between md:justify-start gap-3">
+          <div className="bg-white px-2.5 py-1.5 md:p-2.5 rounded-lg md:rounded-xl inline-flex items-center shadow-xs shrink-0">
              {settings.companyLogo && !logoError ? (
-                <img src={settings.companyLogo} alt="Logo" className="h-6 sm:h-10 w-auto object-contain" onError={() => setLogoError(true)} />
+                <img src={settings.companyLogo} alt="Company Logo" referrerPolicy="no-referrer" className="h-6 md:h-9 w-auto object-contain" onError={() => setLogoError(true)} />
              ) : (
-                <div className="flex items-center gap-1.5 px-2">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <div className="flex items-center gap-1.5 px-1">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    <span className="font-bold text-slate-900 text-lg uppercase tracking-tight">Scbc</span>
+                    <span className="font-bold text-slate-900 text-base md:text-lg tracking-tight">Scbc</span>
                 </div>
              )}
           </div>
           
-          <div className="md:mt-10 text-right md:text-left">
-            <h1 className="text-lg sm:text-2xl font-semibold text-white leading-tight uppercase">
+          <div className="md:mt-10 text-right md:text-left min-w-0">
+            <h1 className="text-sm sm:text-base md:text-2xl font-bold text-white leading-tight tracking-tight truncate md:whitespace-normal">
                 {settings.companyName || 'Fleet Portal'}
             </h1>
-            <p className="text-slate-400 font-medium uppercase tracking-widest text-[9px] mt-1">
+            <p className="text-slate-400 font-medium tracking-wider uppercase text-[10px] md:text-xs md:mt-1.5">
                 Fleet Inspection System
             </p>
           </div>
         </div>
 
-        <div className="mt-4 space-y-2">
-            <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-blue-400 animate-pulse' : isUrlValid ? 'bg-emerald-500' : 'bg-emerald-500'}`}></div>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-                    {isLoading ? loadingMessage : 'System Ready'}
-                </span>
-            </div>
-            <div className="hidden sm:block pt-4 border-t border-white/5">
-                <span className="text-[10px] text-slate-500 uppercase tracking-widest">© Scbc 2026</span>
-            </div>
+        <div className="hidden md:block pt-5 border-t border-white/10">
+            <span className="text-xs text-slate-400 tracking-wide">© Scbc 2026</span>
         </div>
-      </div>
+      </aside>
 
       {/* Form Panel */}
-      <div className="flex-1 flex flex-col bg-white overflow-y-auto relative justify-center px-6 py-8">
-        <div className="w-full max-w-sm mx-auto">
-          
-          <div className="mb-8 text-center md:text-left">
-            <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">
-              {isRegistering ? 'Setup Admin' : 'Welcome Back'}
-            </h2>
-            <p className="text-slate-500 text-sm mt-1">
-              {isRegistering ? 'Create your master account.' : 'Sign in to your inspection portal.'}
-            </p>
-          </div>
-
-          {error && (
-            <div className={`mb-6 p-4 rounded-xl text-xs font-medium border animate-fadeIn
-              ${error.includes("created") ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
-              {error}
+      <main className="flex-1 min-h-0 flex flex-col bg-slate-50 overflow-y-auto px-4 py-3 sm:p-6 md:p-10">
+        <div className="w-full max-w-[400px] mx-auto my-auto">
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5 sm:p-8">
+            <div className="mb-4 sm:mb-6 text-center md:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                {isRegistering ? 'Setup Admin' : 'Sign In'}
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                {isRegistering ? 'Create your master account.' : 'Access your inspection portal.'}
+              </p>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegistering && (
-              <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <input 
-                  type="text" 
-                  required 
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none" 
-                  value={fullName} 
-                  onChange={e => setFullName(e.target.value)} 
-                  placeholder="Full Name" 
-                />
-                <input 
-                  type="text" 
-                  required 
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none" 
-                  value={position} 
-                  onChange={e => setPosition(e.target.value)} 
-                  placeholder="Job Title" 
-                />
+            {error && (
+              <div role="alert" className={`mb-3 sm:mb-5 px-3.5 py-2.5 rounded-xl text-xs font-medium border animate-fadeIn
+                ${error.includes("created") ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                {error}
               </div>
             )}
 
-            <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              {isRegistering && (
+                <div className="space-y-2.5 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                  <input 
+                    type="text" 
+                    required 
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10" 
+                    value={fullName} 
+                    onChange={e => setFullName(e.target.value)} 
+                    placeholder="Full Name" 
+                  />
+                  <input 
+                    type="text" 
+                    required 
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10" 
+                    value={position} 
+                    onChange={e => setPosition(e.target.value)} 
+                    placeholder="Job Title" 
+                  />
+                </div>
+              )}
+
               <div>
+                <label htmlFor="login-username" className="block text-xs font-semibold text-slate-700 mb-1">
+                  Email or Username
+                </label>
                 <input 
+                  id="login-username"
                   type="text" 
                   required 
                   autoComplete="username"
                   autoCapitalize="none"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-200 outline-none font-medium text-sm transition-all text-slate-800" 
+                  className="w-full px-3.5 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-400" 
                   value={username} 
                   onChange={e => setUsername(e.target.value)} 
-                  placeholder="Email Address" 
+                  placeholder="name@company.com" 
                 />
               </div>
 
-              <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  className="w-full px-4 py-4 pr-11 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-200 outline-none font-medium text-sm transition-all text-slate-800" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  placeholder="Password" 
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 transition-colors"
-                  title={showPassword ? 'Hide password' : 'Show password'}
+              <div>
+                <label htmlFor="login-password" className="block text-xs font-semibold text-slate-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input 
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'} 
+                    autoComplete={isRegistering ? 'new-password' : 'current-password'}
+                    className="w-full px-3.5 py-2.5 sm:py-3 pr-11 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-400" 
+                    value={password} 
+                    onChange={e => setPassword(e.target.value)} 
+                    placeholder="Enter your password" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none min-h-[36px]">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400" 
+                        checked={rememberMe} 
+                        onChange={e => setRememberMe(e.target.checked)} 
+                      />
+                      <span className="text-xs text-slate-600 font-medium">Keep me signed in</span>
+                  </label>
+                  
+                  <button 
+                      type="button" 
+                      onClick={async () => {
+                          if (!username) {
+                              setError("Please enter your email first.");
+                              return;
+                          }
+                          if (!appScriptUrl || !appScriptUrl.startsWith('https://script.google.com')) {
+                              setError("Connection error. Please contact your administrator.");
+                              return;
+                          }
+                          setIsLoading(true);
+                          try {
+                              const response = await fetch(appScriptUrl, {
+                                  method: 'POST',
+                                  body: JSON.stringify({ action: 'request_password_reset', username })
+                              });
+                              const result = await response.json();
+                              if (result.status === 'success') {
+                                  setError("Reset request sent. Please contact your administrator.");
+                              } else {
+                                  setError(result.message || "Email not recognized. Verify or contact your Admin.");
+                              }
+                          } catch (e) {
+                              setError("Network error. Could not notify administrator.");
+                          } finally {
+                              setIsLoading(false);
+                          }
+                      }}
+                      className="text-xs font-semibold text-slate-700 hover:text-slate-950 transition-colors min-h-[36px] px-1"
+                  >
+                      Forgot Password?
+                  </button>
+              </div>
+
+              <div className="pt-1 sm:pt-2">
+                <button 
+                  type="submit" 
+                  disabled={!canSubmit} 
+                  className="w-full py-3 sm:py-3.5 rounded-xl font-semibold text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.99] transition-all text-sm disabled:bg-slate-200 disabled:text-slate-400 shadow-xs flex items-center justify-center gap-2"
                 >
-                  {showPassword ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                    </svg>
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>{loadingMessage}</span>
+                    </>
+                  ) : isRegistering ? (
+                    'Register Admin'
                   ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    'Sign In'
                   )}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between px-1 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded border-slate-300 text-slate-800 focus:ring-slate-400" 
-                      checked={rememberMe} 
-                      onChange={e => setRememberMe(e.target.checked)} 
-                    />
-                    <span className="text-xs text-slate-500 font-medium">Keep me signed in</span>
-                </label>
-                
-                <button 
-                    type="button" 
-                    onClick={async () => {
-                        if (!username) {
-                            setError("Please enter your email first.");
-                            return;
-                        }
-                        if (!appScriptUrl || !appScriptUrl.startsWith('https://script.google.com')) {
-                            setError("Connection error. Please contact your administrator.");
-                            return;
-                        }
-                        setIsLoading(true);
-                        try {
-                            const response = await fetch(appScriptUrl, {
-                                method: 'POST',
-                                body: JSON.stringify({ action: 'request_password_reset', username })
-                            });
-                            const result = await response.json();
-                            if (result.status === 'success') {
-                                setError("Reset request sent. Please contact your administrator.");
-                            } else {
-                                setError(result.message || "Email not recognized. Verify or contact your Admin.");
-                            }
-                        } catch (e) {
-                            setError("Network error. Could not notify administrator.");
-                        } finally {
-                            setIsLoading(false);
-                        }
-                    }}
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                    Forgot Password?
-                </button>
-            </div>
-
-            <div className="pt-4">
-              <button 
-                type="submit" 
-                disabled={!canSubmit} 
-                className="w-full py-4 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 active:scale-[0.99] transition-all text-sm disabled:bg-slate-200 disabled:text-slate-400 shadow-md flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>{loadingMessage}</span>
-                  </>
-                ) : isRegistering ? (
-                  'Register Admin'
-                ) : (
-                  'Sign In'
-                )}
-              </button>
-            </div>
-            
-            {!isRegistering && (
-                <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">
-                    First time login? Enter email and leave password blank.
-                </p>
-            )}
-          </form>
+              
+              {!isRegistering && (
+                  <p className="text-center text-[11px] text-slate-500 font-medium pt-1">
+                      First time login? Enter email and leave password blank.
+                  </p>
+              )}
+            </form>
+          </div>
+          <p className="md:hidden text-center text-[11px] text-slate-400 mt-3">© Scbc 2026</p>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

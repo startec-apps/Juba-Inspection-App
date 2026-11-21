@@ -131,26 +131,26 @@ const LauncherTile = ({
         <button 
             type="button"
             onClick={() => !effectiveLock && onNavigate(id)}
-            className={`flex flex-col items-center justify-center p-3 sm:p-5 transition-all w-full group relative rounded-2xl bg-white border border-slate-200/80 shadow-2xs
-                ${effectiveLock ? 'opacity-35 cursor-not-allowed grayscale' : 'hover:border-slate-300 hover:shadow-sm active:scale-95'}`}
+            className={`flex flex-col items-center justify-center px-2 py-3.5 sm:p-5 transition-all duration-200 w-[calc(33.333%-0.45rem)] sm:w-[205px] md:w-[225px] min-h-[96px] sm:min-h-[126px] group relative rounded-2xl bg-white border border-slate-200/80 shadow-2xs
+                ${effectiveLock ? 'opacity-35 cursor-not-allowed grayscale' : 'hover:border-slate-300 hover:shadow-sm hover:-translate-y-0.5 active:scale-95'}`}
         >
-            <div className="mb-2 sm:mb-2.5 flex items-center justify-center relative">
+            <div className="mb-2 sm:mb-3 flex items-center justify-center relative">
                 {icon}
                 {effectiveLock && (
-                    <div className="absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-1 shadow-md ring-2 ring-white">
+                    <div className="absolute -top-1 -right-1.5 bg-slate-900 text-white rounded-full p-1 shadow-md ring-2 ring-white">
                         <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>
                 )}
                 {badgeCount > 0 && !effectiveLock && (
-                    <div className={`absolute -top-1 -right-1 ${badgeColor} text-white text-[9px] font-bold font-mono px-1 py-0.2 rounded-full border border-white shadow-sm`}>
+                    <div className={`absolute -top-1 -right-1.5 ${badgeColor} text-white text-[9px] font-bold font-mono tabular-nums px-1.5 py-0.5 rounded-full border border-white shadow-sm leading-none`}>
                         {badgeCount}
                     </div>
                 )}
                 {isAddon && !effectiveLock && (
-                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[7px] font-bold px-1 rounded shadow-2xs uppercase tracking-tighter">Pro</div>
+                    <div className="absolute -top-1 -right-1.5 bg-indigo-600 text-white text-[7px] font-bold px-1 rounded shadow-2xs uppercase tracking-tighter">Pro</div>
                 )}
             </div>
-            <span className={`text-[10px] sm:text-[11px] font-bold text-center leading-snug uppercase tracking-wider truncate max-w-full ${effectiveLock ? 'text-slate-400' : 'text-slate-700 group-hover:text-slate-950'}`}>
+            <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight tracking-tight sm:tracking-normal min-h-[26px] sm:min-h-0 flex items-center justify-center px-0.5 ${effectiveLock ? 'text-slate-400' : 'text-slate-700 group-hover:text-slate-950'}`}>
                 {label}
             </span>
         </button>
@@ -158,10 +158,11 @@ const LauncherTile = ({
 };
 
 const SectionHeader = ({ label, badge }: { label: string, badge?: React.ReactNode }) => (
-    <div className="w-full flex items-center gap-3 sm:gap-4 mb-3 sm:mb-3.5">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{label}</span>
+    <div className="w-full flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+        <div className="h-px flex-1 bg-slate-200/80"></div>
+        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-[0.16em] whitespace-nowrap text-center">{label}</span>
         {badge}
-        <div className="h-px flex-1 bg-slate-200/70"></div>
+        <div className="h-px flex-1 bg-slate-200/80"></div>
     </div>
 );
 
@@ -173,12 +174,12 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     const isEnabled = (modId: string) => settings.enabledModules?.[modId] !== false;
 
     return (
-        <div className="max-w-5xl mx-auto py-3 sm:py-6 px-1 sm:px-3 w-full overflow-x-hidden">
-            <div className="space-y-6 sm:space-y-7">
+        <div className="max-w-3xl mx-auto py-3 sm:py-6 px-2 sm:px-4 w-full min-h-[calc(100dvh-11rem)] flex flex-col justify-center overflow-x-hidden">
+            <div className="space-y-6 sm:space-y-8 w-full">
                 {/* 1. Core Inspection Modules */}
                 <section id="inspection-forms-section" className="animate-fadeIn">
-                    <SectionHeader label="AUDIT & INSPECTION REGISTRIES" />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                    <SectionHeader label="Audit & Inspection Registries" />
+                    <div className="flex flex-wrap items-stretch justify-center gap-2.5 sm:gap-4">
                         {isEnabled('general') && <LauncherTile id="general" label="General Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<GeneralAuditIcon />} />}
                         {isEnabled('petroleum_v2') && <LauncherTile id="petroleum_v2" label="Petroleum Tanker" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<PetroleumAuditIcon />} />}
                         {isEnabled('acid') && <LauncherTile id="acid" label="Acid Tanker" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<AcidAuditIcon />} />}
@@ -187,8 +188,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
                 {/* 2. Operations & Telemetry */}
                 <section className="animate-fadeIn" style={{ animationDelay: '80ms' }}>
-                    <SectionHeader label="FLEET OPERATIONS" />
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                    <SectionHeader label="Fleet Operations" />
+                    <div className="flex flex-wrap items-stretch justify-center gap-2.5 sm:gap-4">
                         {isEnabled('analytics') && <LauncherTile id="analytics" label="Fleet Analytics" isLocked={isLocked} onNavigate={onNavigate} icon={<AnalyticsIcon />} badgeCount={pendingAlertsCount} badgeColor="bg-rose-600" />}
                         {isEnabled('track_requests') && <LauncherTile id="track_requests" label="Inspection Request" isLocked={isLocked} onNavigate={onNavigate} icon={<RequestsIcon />} />}
                         <LauncherTile id="support" label="Support Desk" isLocked={isLocked} onNavigate={onNavigate} icon={<SupportIcon />} />
@@ -197,8 +198,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
                 {/* 3. Control Center (Admin Governed) */}
                 <section id="system-mgmt-section" className="animate-fadeIn" style={{ animationDelay: '140ms' }}>
-                    <SectionHeader label="GOVERNANCE & SYSTEM" />
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                    <SectionHeader label="Governance & System" />
+                    <div className="flex flex-wrap items-stretch justify-center gap-2.5 sm:gap-4">
                         <LauncherTile id="users" label="User Directory" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<StaffIcon />} />
                         {isEnabled('registry') && <LauncherTile id="registry" label="Fleet Registry" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<RegistryIcon />} />}
                         <LauncherTile id="settings" label="System Settings" isLocked={isLocked} isForcedLock={!isAdmin} onNavigate={onNavigate} icon={<SettingsIcon />} />
