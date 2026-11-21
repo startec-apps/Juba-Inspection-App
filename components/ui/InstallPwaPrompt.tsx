@@ -4,45 +4,28 @@ const InstallPwaPrompt = () => {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isVisible, setIsVisible] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         // 1. Already installed? Never show.
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
         if (isStandalone) return;
 
-        // 2. Device detection — mobile/tablet only (skip desktop)
-        const ua = navigator.userAgent.toLowerCase();
-        const isIOSDevice = /iphone|ipad|ipod/.test(ua) ||
+        // 2. Detect platform
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isIosDevice = /iphone|ipad|ipod/.test(userAgent) ||
             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isAndroidDevice = /android/.test(ua);
-        const isMobileUA = isIOSDevice || isAndroidDevice || /mobile|tablet/.test(ua);
-        const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-        const isSmallScreen = window.matchMedia('(max-width: 1024px)').matches;
+        setIsIOS(isIosDevice);
 
-        // Show only on phones/tablets: must look mobile OR (touch + small screen)
-        const qualifiesAsMobile = isMobileUA || (isTouchDevice && isSmallScreen);
-
-        if (!qualifiesAsMobile) return;
-
-        setIsMobile(true);
-        setIsIOS(isIOSDevice);
-
-        // 3. Re-show logic:
-        //    - If never dismissed → show immediately
-        //    - If dismissed → re-show only after 5 minutes
-        const dismissedAt = localStorage.getItem('sc_install_dismissed');
-        if (dismissedAt) {
-            const elapsed = Date.now() - parseInt(dismissedAt);
-            const cooldownRemaining = 5 * 60 * 1000 - elapsed;
-            if (cooldownRemaining > 0) {
-                const timer = setTimeout(() => setIsVisible(true), cooldownRemaining);
-                return () => clearTimeout(timer);
-            }
+        // 3. 5-minute cooldown after dismissal (was 7 days)
+        const DismissedCooldownMs = 5 * 60 * 1000;
+        const hasDismissed = localStorage.getItem('sc_install_dismissed');
+        if (hasDismissed) {
+            const elapsed = Date.now() - parseInt(hasDismissed);
+            if (elapsed < DismissedCooldownMs) return;
         }
 
-        if (isIOSDevice) {
-            const timer = setTimeout(() => setIsVisible(true), 2000);
+        if (isIosDevice) {
+            const timer = setTimeout(() => setIsVisible(true), 3000);
             return () => clearTimeout(timer);
         }
 
@@ -52,9 +35,7 @@ const InstallPwaPrompt = () => {
             setIsVisible(true);
         };
 
-        // Some browsers fire before we attach; also show after a short delay if event didn't fire but app is installable
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     }, []);
 
@@ -71,10 +52,10 @@ const InstallPwaPrompt = () => {
         localStorage.setItem('sc_install_dismissed', Date.now().toString());
     };
 
-    if (!isMobile || !isVisible) return null;
+    if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 z-[9999] animate-fadeIn">
+        <div className="fixed bottom-4 left-4 right-4 z-[9999] md:left-auto md:right-4 md:w-96 animate-fadeIn">
             <div className="bg-slate-900/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl border border-slate-700 flex flex-col gap-4">
                 <div className="flex items-start gap-4">
                     <div className="bg-white p-1 rounded-xl shrink-0">
