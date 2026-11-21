@@ -54,6 +54,18 @@ export const useSettings = () => {
         }
     }, [appScriptUrl]);
 
+    const isValidLogoValue = (val: unknown): val is string => {
+        if (typeof val !== 'string') return false;
+        const trimmed = val.trim();
+        if (trimmed.length <= 10 || trimmed.includes('Firebase')) return false;
+        return (
+            trimmed.startsWith('data:image/') ||
+            trimmed.startsWith('http://') ||
+            trimmed.startsWith('https://') ||
+            trimmed.startsWith('/')
+        );
+    };
+
     const fetchSystemSettings = async (url: string, force: boolean = false) => {
         const trimmedUrl = (url || '').trim();
         if (!trimmedUrl || !trimmedUrl.startsWith('https://script.google.com')) return;
@@ -85,20 +97,33 @@ export const useSettings = () => {
                 
                 if (latestConfig && latestConfig.length >= 4) {
                     const rawLogo = latestConfig[4] ? String(latestConfig[4]) : '';
-                    const remoteLogo = (rawLogo.length > 50 && !rawLogo.includes('Firebase')) ? rawLogo : undefined;
+                    const remoteLogo = isValidLogoValue(rawLogo) ? rawLogo : undefined;
 
-                    const remoteSettings: SystemSettings = {
-                        companyName: latestConfig[0] || 'SafetyCheck Pro',
-                        managerEmail: latestConfig[1] || '',
-                        groupEmail: latestConfig[9] ? String(latestConfig[9]) : (settings.groupEmail || 'juba_alerts@googlegroups.com'),
-                        companyLogo: remoteLogo || settings.companyLogo,
-                        mobileApkLink: latestConfig[5] || '', 
-                        webAppUrl: latestConfig[6] || '',
-                        templates: latestConfig[7] ? JSON.parse(latestConfig[7]) : settings.templates || TEMPLATE_CONFIGS,
-                        enabledModules: latestConfig[8] ? JSON.parse(latestConfig[8]) : settings.enabledModules || {}
-                    };
-                    
                     setSettings(prev => {
+                        let parsedTemplates = prev.templates || TEMPLATE_CONFIGS;
+                        if (latestConfig[7]) {
+                            try { parsedTemplates = JSON.parse(latestConfig[7]); } catch {}
+                        }
+
+                        let parsedModules = prev.enabledModules || {};
+                        if (latestConfig[8]) {
+                            try { parsedModules = JSON.parse(latestConfig[8]); } catch {}
+                        }
+
+                        const nextLogo = remoteLogo || (isValidLogoValue(prev.companyLogo) ? prev.companyLogo : undefined);
+
+                        const remoteSettings: SystemSettings = {
+                            ...prev,
+                            companyName: latestConfig[0] || prev.companyName || 'SafetyCheck Pro',
+                            managerEmail: latestConfig[1] || prev.managerEmail || '',
+                            groupEmail: latestConfig[9] ? String(latestConfig[9]) : (prev.groupEmail || 'juba_alerts@googlegroups.com'),
+                            companyLogo: nextLogo,
+                            mobileApkLink: latestConfig[5] || prev.mobileApkLink || '', 
+                            webAppUrl: latestConfig[6] || prev.webAppUrl || '',
+                            templates: parsedTemplates,
+                            enabledModules: parsedModules
+                        };
+
                         const hasChanged = JSON.stringify(prev) !== JSON.stringify(remoteSettings);
                         if (hasChanged) {
                             localStorage.setItem('safetyCheck_settings', JSON.stringify(remoteSettings));
@@ -120,12 +145,20 @@ export const useSettings = () => {
         // Read settings from Firebase Firestore first
         getSettingsFromFirebase().then(remoteFb => {
             if (remoteFb) {
-                setSettings(prev => ({
-                    ...prev,
-                    ...remoteFb,
-                    templates: remoteFb.templates || prev.templates || TEMPLATE_CONFIGS
-                }));
-                localStorage.setItem('safetyCheck_settings', JSON.stringify(remoteFb));
+                setSettings(prev => {
+                    const nextLogo = isValidLogoValue(remoteFb.companyLogo)
+                        ? remoteFb.companyLogo
+                        : (isValidLogoValue(prev.companyLogo) ? prev.companyLogo : undefined);
+
+                    const merged: SystemSettings = {
+                        ...prev,
+                        ...remoteFb,
+                        companyLogo: nextLogo,
+                        templates: remoteFb.templates || prev.templates || TEMPLATE_CONFIGS
+                    };
+                    localStorage.setItem('safetyCheck_settings', JSON.stringify(merged));
+                    return merged;
+                });
                 if (remoteFb.backupSpreadsheetUrl && !appScriptUrl) {
                     setAppScriptUrl(remoteFb.backupSpreadsheetUrl);
                 }
