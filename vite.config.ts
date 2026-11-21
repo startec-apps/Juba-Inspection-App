@@ -13,28 +13,49 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
       },
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       manifest: {
-        name: 'SafetyCheck Pro',
+        id: '/Juba-Inspection-App/',
+        name: 'SafetyCheck Pro2.5',
         short_name: 'SafetyCheck',
-        description: 'Professional Truck & Trailer Inspection App',
-        theme_color: '#1e3a8a',
-        background_color: '#ffffff',
+        description: 'Professional Truck & Trailer Inspection App with AI-powered analysis, PDF generation, and Google Sheets integration.',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: '/Juba-Inspection-App/',
+        scope: '/Juba-Inspection-App/',
         icons: [
           {
-            src: 'https://cdn-icons-png.flaticon.com/512/716/716766.png',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'https://cdn-icons-png.flaticon.com/512/716/716766.png',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
           }
         ]
       }
