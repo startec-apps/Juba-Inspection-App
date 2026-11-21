@@ -23,8 +23,8 @@ export default defineConfig({
       },
       manifest: {
         id: '/Juba-Inspection-App/',
-        name: 'SafetyCheck Pro2.5',
-        short_name: 'SafetyCheck',
+        name: 'Juba Transport',
+        short_name: 'Juba Transport',
         description: 'Professional Truck & Trailer Inspection App with AI-powered analysis, PDF generation, and Google Sheets integration.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
