@@ -41,6 +41,10 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
   const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
+    setLogoError(false);
+  }, [settings.companyLogo]);
+
+  useEffect(() => {
     const saved = localStorage.getItem('sc_remembered_creds');
     if (saved) {
       try {
@@ -242,6 +246,16 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
   };
 
   const canSubmit = !isLoading && username.trim().length > 0;
+  const validCompanyLogo =
+    typeof settings.companyLogo === 'string' &&
+    settings.companyLogo.trim().length > 10 &&
+    !settings.companyLogo.includes('Firebase') &&
+    (settings.companyLogo.startsWith('data:image/') ||
+      settings.companyLogo.startsWith('http://') ||
+      settings.companyLogo.startsWith('https://') ||
+      settings.companyLogo.startsWith('/'))
+      ? settings.companyLogo
+      : null;
 
   return (
     <div className="h-[100dvh] w-full bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 overflow-hidden">
@@ -250,8 +264,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
       <aside className="w-full md:w-[38%] lg:w-[35%] bg-slate-900 px-4 py-3 md:p-10 lg:p-12 flex flex-col justify-between shrink-0 border-b border-slate-800 md:border-b-0 md:border-r">
         <div className="flex md:flex-col items-center md:items-start justify-between md:justify-start gap-3">
           <div className="bg-white px-2.5 py-1.5 md:p-2.5 rounded-lg md:rounded-xl inline-flex items-center shadow-xs shrink-0">
-             {settings.companyLogo && !logoError ? (
-                <img src={settings.companyLogo} alt="Company Logo" referrerPolicy="no-referrer" className="h-6 md:h-9 w-auto object-contain" onError={() => setLogoError(true)} />
+             {validCompanyLogo && !logoError ? (
+                <img src={validCompanyLogo} alt="Company Logo" referrerPolicy="no-referrer" className="h-6 md:h-9 w-auto object-contain" onError={() => setLogoError(true)} />
              ) : (
                 <div className="flex items-center gap-1.5 px-1">
                     <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
@@ -303,7 +317,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                   <input 
                     type="text" 
                     required 
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10" 
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 placeholder:text-slate-300 placeholder:font-normal" 
                     value={fullName} 
                     onChange={e => setFullName(e.target.value)} 
                     placeholder="Full Name" 
@@ -311,7 +325,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                   <input 
                     type="text" 
                     required 
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10" 
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 placeholder:text-slate-300 placeholder:font-normal" 
                     value={position} 
                     onChange={e => setPosition(e.target.value)} 
                     placeholder="Job Title" 
@@ -329,7 +343,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                   required 
                   autoComplete="username"
                   autoCapitalize="none"
-                  className="w-full px-3.5 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-400" 
+                  className="w-full px-3.5 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-300 placeholder:font-normal" 
                   value={username} 
                   onChange={e => setUsername(e.target.value)} 
                   placeholder="name@company.com" 
@@ -345,7 +359,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
                     id="login-password"
                     type={showPassword ? 'text' : 'password'} 
                     autoComplete={isRegistering ? 'new-password' : 'current-password'}
-                    className="w-full px-3.5 py-2.5 sm:py-3 pr-11 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-400" 
+                    className="w-full px-3.5 py-2.5 sm:py-3 pr-11 bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none font-medium text-sm transition-all text-slate-900 placeholder:text-slate-300 placeholder:font-normal" 
                     value={password} 
                     onChange={e => setPassword(e.target.value)} 
                     placeholder="Enter your password" 
