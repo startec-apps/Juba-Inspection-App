@@ -260,15 +260,15 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
   return (
     <div className="h-[100dvh] w-full bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 overflow-hidden">
       
-      {/* Brand Panel: Compact top bar on mobile, structured sidebar on desktop */}
-      <aside className="w-full md:w-[38%] lg:w-[35%] bg-slate-900 px-4 py-3 md:p-10 lg:p-12 flex flex-col justify-between shrink-0 border-b border-slate-800 md:border-b-0 md:border-r">
+      {/* Brand Panel: Compact top bar on mobile, structured light architectural sidebar on desktop */}
+      <aside className="w-full md:w-[38%] lg:w-[35%] bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/40 px-4 py-3 md:p-10 lg:p-12 flex flex-col justify-between shrink-0 border-b border-slate-200 md:border-b-0 md:border-r">
         <div className="flex md:flex-col items-center md:items-start justify-between md:justify-start gap-3">
-          <div className="bg-white px-2.5 py-1.5 md:p-2.5 rounded-lg md:rounded-xl inline-flex items-center shadow-xs shrink-0">
+          <div className="bg-slate-200/70 border border-slate-300/60 px-2.5 py-1.5 md:p-3 rounded-lg md:rounded-xl inline-flex items-center shadow-2xs shrink-0">
              {validCompanyLogo && !logoError ? (
                 <img src={validCompanyLogo} alt="Company Logo" referrerPolicy="no-referrer" className="h-6 md:h-9 w-auto object-contain" onError={() => setLogoError(true)} />
              ) : (
                 <div className="flex items-center gap-1.5 px-1">
-                    <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span className="font-bold text-slate-900 text-base md:text-lg tracking-tight">Scbc</span>
@@ -277,16 +277,16 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, appScriptUrl, setAppScri
           </div>
           
           <div className="md:mt-10 text-right md:text-left min-w-0">
-            <h1 className="text-sm sm:text-base md:text-2xl font-bold text-white leading-tight tracking-tight truncate md:whitespace-normal">
+            <h1 className="text-sm sm:text-base md:text-2xl font-bold text-slate-900 leading-tight tracking-tight truncate md:whitespace-normal">
                 {settings.companyName || 'Fleet Portal'}
             </h1>
-            <p className="text-slate-400 font-medium tracking-wider uppercase text-[10px] md:text-xs md:mt-1.5">
+            <p className="text-slate-500 font-medium tracking-wider uppercase text-[10px] md:text-xs md:mt-1.5">
                 Fleet Inspection System
             </p>
           </div>
         </div>
 
-        <div className="hidden md:block pt-5 border-t border-white/10">
+        <div className="hidden md:block pt-5 border-t border-slate-200/80">
             <span className="text-xs text-slate-400 tracking-wide">© Scbc 2026</span>
         </div>
       </aside>

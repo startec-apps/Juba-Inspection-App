@@ -70,6 +70,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Invoices Collection
+    match /invoices/{invoiceId} {
+      allow read: if true;
+      allow create: if isValidId(invoiceId)
+        && request.resource.data.keys().hasAll(['id', 'invoiceNumber', 'clientName', 'issueDate', 'dueDate', 'status', 'total'])
+        && request.resource.data.status in ['Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
+      allow update: if isValidId(invoiceId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.status in ['Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
+      allow delete: if isValidId(invoiceId);
+    }
+
     // Connection testing endpoint
     match /test/{testId} {
       allow read, write: if true;

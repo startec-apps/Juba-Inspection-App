@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SystemSettings, User, TemplateConfig } from '../types';
 import { BACKEND_SCRIPT_TEMPLATE, BACKEND_FILES } from '../constants';
 import { TemplateHeaderPreview } from '../components/TemplateHeaderPreview';
+import { InvoicingSystem } from '../components/settings/InvoicingSystem';
 import { 
     testFirebaseConnection, 
     testSpreadsheetConnection, 
@@ -38,7 +39,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     settings, setSettings, appScriptUrl, setAppScriptUrl, handleSaveSettings, isSavingSettings, user, showToast
 }) => {
     const [logoError, setLogoError] = useState(false);
-    const [activeTab, setActiveTab] = useState<'app' | 'backend'>('app');
+    const [activeTab, setActiveTab] = useState<'app' | 'invoicing' | 'backend'>('app');
     const [selectedBackendFile, setSelectedBackendFile] = useState<string>('1_Controller.gs');
     const [previewingTemplate, setPreviewingTemplate] = useState<{key: string, config: TemplateConfig} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -298,13 +299,21 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 )}
              </div>
 
-             <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
+             <div className="flex flex-wrap gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
                 <button 
                     onClick={() => setActiveTab('app')}
                     className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'app' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     Application
                 </button>
+                {isAdmin && (
+                    <button 
+                        onClick={() => setActiveTab('invoicing')}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'invoicing' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        Invoicing
+                    </button>
+                )}
                 {isSuperAdmin && (
                     <button 
                         onClick={() => setActiveTab('backend')}
@@ -315,7 +324,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 )}
              </div>
 
-             {activeTab === 'app' ? (
+             {activeTab === 'invoicing' && isAdmin ? (
+                <InvoicingSystem
+                    settings={settings}
+                    setSettings={setSettings}
+                    handleSaveSettings={handleSaveSettings}
+                    isSavingSettings={isSavingSettings}
+                    user={user}
+                    showToast={showToast}
+                />
+             ) : activeTab === 'app' ? (
                 <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-10">
                     <section>
                         <div className="flex items-center justify-between mb-2">

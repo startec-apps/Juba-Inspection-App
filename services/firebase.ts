@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import firebaseConfig from '../firebase-applet-config.json';
-import { InspectionData, User, SystemSettings, ValidationLists, AppNotification, SupportTicket, TicketComment } from '../types';
+import { InspectionData, User, SystemSettings, ValidationLists, AppNotification, SupportTicket, TicketComment, InvoiceRecord } from '../types';
 import { SHEET_HEADERS, PETROLEUM_V2_HEADERS, ACID_HEADERS } from '../constants';
 
 // Initialize Firebase App
@@ -189,7 +189,8 @@ const TTL = {
     FLEET_REGISTRY: 30 * 60 * 1000,  // 30 minutes (static master dropdowns)
     SETTINGS: 30 * 60 * 1000,        // 30 minutes
     USERS: 30 * 60 * 1000,           // 30 minutes
-    TICKETS: 5 * 60 * 1000           // 5 minutes
+    TICKETS: 5 * 60 * 1000,          // 5 minutes
+    INVOICES: 5 * 60 * 1000          // 5 minutes
 };
 
 // Memory cache for immediate intra-session navigation (0ms, 0 reads)
@@ -1152,6 +1153,115 @@ export async function addCommentToSupportTicketInFirebase(ticketId: string, comm
         } else {
             console.warn("Firebase addCommentToSupportTicket notice:", error?.message || error);
         }
+        return false;
+    }
+}
+
+// ==========================================
+// 8. INVOICES (Admin Billing Ledger)
+// ==========================================
+
+export async function getInvoicesFromFirebase(forceRefresh: boolean = false): Promise<InvoiceRecord[]> {
+    const cacheKey = 'invoices_list';
+    if (!forceRefresh) {
+        const cached = getPersistentCache<InvoiceRecord[]>(cacheKey, TTL.INVOICES);
+        if (cached) return cached;
+    }
+
+    const fallbackCached = getPersistentCache<InvoiceRecord[]>(cacheKey, 30 * 24 * 60 * 60 * 1000) || [];
+
+    if (isFirestoreQuotaExceeded()) {
+        return fallbackCached;
+    }
+
+    if (inFlightRequests.has(cacheKey)) {
+        return inFlightRequests.get(cacheKey)!;
+    }
+
+    const fetchPromise = (async () => {
+        try {
+            const collRef = collection(db, 'invoices');
+            const q = query(collRef, limit(50));
+            const snapshot = await getDocs(q);
+            const invoices: InvoiceRecord[] = [];
+            snapshot.forEach(docSnap => {
+                invoices.push(docSnap.data() as InvoiceRecord);
+            });
+
+            invoices.sort((a, b) => new Date(b.createdAt || b.issueDate || 0).getTime() - new Date(a.createdAt || a.issueDate || 0).getTime());
+            setPersistentCache(cacheKey, invoices);
+            return invoices;
+        } catch (error: any) {
+            if (isQuotaError(error)) {
+                markFirestoreQuotaExceeded();
+            } else {
+                console.warn("Firebase getInvoices notice:", error?.message || error);
+            }
+            return fallbackCached;
+        } finally {
+            inFlightRequests.delete(cacheKey);
+        }
+    })();
+
+    inFlightRequests.set(cacheKey, fetchPromise);
+    return fetchPromise;
+}
+
+export async function saveInvoiceToFirebase(invoice: InvoiceRecord): Promise<{ success: boolean; id: string }> {
+    const id = invoice.id || `INV-${Date.now()}`;
+    const now = new Date().toISOString();
+    const payload: InvoiceRecord = {
+        ...invoice,
+        id,
+        createdAt: invoice.createdAt || now,
+        updatedAt: now
+    };
+
+    // Update persistent cache optimistically so offline / quota mode works seamlessly
+    const existing = getPersistentCache<InvoiceRecord[]>('invoices_list', 30 * 24 * 60 * 60 * 1000) || [];
+    const idx = existing.findIndex(inv => inv.id === id);
+    const updatedList = idx >= 0
+        ? existing.map(inv => (inv.id === id ? payload : inv))
+        : [payload, ...existing];
+    setPersistentCache('invoices_list', updatedList);
+
+    if (isFirestoreQuotaExceeded()) {
+        return { success: true, id };
+    }
+
+    try {
+        const docRef = doc(db, 'invoices', id);
+        await setDoc(docRef, payload, { merge: true });
+        return { success: true, id };
+    } catch (error: any) {
+        if (isQuotaError(error)) {
+            markFirestoreQuotaExceeded();
+            return { success: true, id };
+        }
+        console.warn("Firebase saveInvoice notice:", error?.message || error);
+        return { success: false, id };
+    }
+}
+
+export async function deleteInvoiceFromFirebase(invoiceId: string): Promise<boolean> {
+    if (!invoiceId) return false;
+
+    const existing = getPersistentCache<InvoiceRecord[]>('invoices_list', 30 * 24 * 60 * 60 * 1000) || [];
+    setPersistentCache('invoices_list', existing.filter(inv => inv.id !== invoiceId));
+
+    if (isFirestoreQuotaExceeded()) {
+        return true;
+    }
+
+    try {
+        await deleteDoc(doc(db, 'invoices', invoiceId));
+        return true;
+    } catch (error: any) {
+        if (isQuotaError(error)) {
+            markFirestoreQuotaExceeded();
+            return true;
+        }
+        console.warn("Firebase deleteInvoice notice:", error?.message || error);
         return false;
     }
 }

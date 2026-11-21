@@ -66,6 +66,12 @@
         "templates": { "type": "object", "description": "Document header configuration per module" },
         "enabledModules": { "type": "object", "description": "Module enable/disable toggles" },
         "backupSpreadsheetUrl": { "type": "string", "description": "Backup Google Apps Script / Sheet URL" },
+        "billingAddress": { "type": "string", "description": "Organization billing street address" },
+        "billingEmail": { "type": "string", "description": "Accounts receivable / billing email" },
+        "taxId": { "type": "string", "description": "Tax / VAT registration number" },
+        "defaultCurrency": { "type": "string", "description": "Default invoicing currency code" },
+        "defaultTaxRate": { "type": "number", "description": "Default tax percentage" },
+        "paymentInstructions": { "type": "string", "description": "Default bank or remittance details" },
         "updatedAt": { "type": "string", "description": "Last modified timestamp" }
       },
       "required": ["companyName"]
@@ -139,6 +145,36 @@
         "updatedAt": { "type": "string", "description": "Last update timestamp" }
       },
       "required": ["ticketId", "subject", "user"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Billing invoice record created by administrators for fleet inspection services and subscriptions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique invoice document ID" },
+        "invoiceNumber": { "type": "string", "description": "Formatted sequential invoice reference" },
+        "clientName": { "type": "string", "description": "Client or organization billed" },
+        "clientEmail": { "type": "string", "description": "Client billing email" },
+        "clientAddress": { "type": "string", "description": "Client billing address" },
+        "clientTaxId": { "type": "string", "description": "Client tax or VAT ID" },
+        "issueDate": { "type": "string", "description": "Invoice issue date (YYYY-MM-DD)" },
+        "dueDate": { "type": "string", "description": "Payment due date (YYYY-MM-DD)" },
+        "paymentTerms": { "type": "string", "description": "Payment terms label" },
+        "currency": { "type": "string", "description": "ISO currency code" },
+        "items": { "type": "array", "description": "Line items billed on this invoice" },
+        "subtotal": { "type": "number", "description": "Line items sum before discount and tax" },
+        "discountAmount": { "type": "number", "description": "Discount amount applied" },
+        "taxRate": { "type": "number", "description": "Tax percentage applied" },
+        "taxAmount": { "type": "number", "description": "Calculated tax amount" },
+        "total": { "type": "number", "description": "Final invoice total due" },
+        "status": { "type": "string", "enum": ["Draft", "Pending", "Paid", "Overdue", "Cancelled"], "description": "Invoice payment status" },
+        "notes": { "type": "string", "description": "Invoice remarks or payment instructions" },
+        "paidAt": { "type": "string", "description": "Timestamp when invoice was settled" },
+        "createdBy": { "type": "string", "description": "Administrator who created the invoice" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last modification timestamp" }
+      },
+      "required": ["id", "invoiceNumber", "clientName", "issueDate", "dueDate", "status", "total"]
     }
   },
   "firestore": {
@@ -169,6 +205,10 @@
     "/support_tickets/{ticketId}": {
       "schema": "SupportTicket",
       "description": "Customer support tickets, maintenance reports, and communication threads."
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Administrative invoices and billing ledger."
     }
   }
 }

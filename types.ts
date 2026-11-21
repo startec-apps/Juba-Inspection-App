@@ -116,6 +116,12 @@ export interface SystemSettings {
     cloudBackupSync?: 'auto_mirror' | 'standby_failover';
     firebaseLastSync?: string;
     sheetLastSync?: string;
+    billingAddress?: string;
+    billingEmail?: string;
+    taxId?: string;
+    defaultCurrency?: string;
+    defaultTaxRate?: number;
+    paymentInstructions?: string;
 }
 
 export interface ValidationLists {
@@ -160,5 +166,41 @@ export interface SupportTicket {
     comments: TicketComment[];
     assignedTo?: string;
     attachment?: string;
+}
+
+export type InvoiceStatus = 'Draft' | 'Pending' | 'Paid' | 'Overdue' | 'Cancelled';
+
+export interface InvoiceLineItem {
+    id: string;
+    description: string;
+    category?: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+}
+
+export interface InvoiceRecord {
+    id: string;
+    invoiceNumber: string;
+    clientName: string;
+    clientEmail?: string;
+    clientAddress?: string;
+    clientTaxId?: string;
+    issueDate: string;
+    dueDate: string;
+    paymentTerms: string;
+    currency: string;
+    items: InvoiceLineItem[];
+    subtotal: number;
+    discountAmount: number;
+    taxRate: number;
+    taxAmount: number;
+    total: number;
+    status: InvoiceStatus;
+    notes?: string;
+    paidAt?: string;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
