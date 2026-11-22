@@ -29,7 +29,6 @@ import {
     getCachedInvoicesSync,
     getSubscriptionSummary
 } from './services/firebase';
-import { applyCompanyLogoAsAppIcon } from './lib/iconUtils';
 
 // UI Components
 import Toast from './components/ui/Toast';
@@ -37,6 +36,7 @@ import SubmissionOverlay from './components/ui/SubmissionOverlay';
 import SystemTour from './components/ui/SystemTour'; 
 import InstallPwaPrompt from './components/ui/InstallPwaPrompt';
 import UpdatePrompt from './components/ui/UpdatePrompt';
+import UpdateBanner from './components/ui/UpdateBanner';
 import AppBadge from './components/ui/AppBadge';
 import WhatsNewModal from './components/ui/WhatsNewModal';
 import VersionTag from './components/ui/VersionTag';
@@ -145,10 +145,22 @@ const App = () => {
     (window as any).isSubscriptionLocked = !hasActivePaidInvoice;
   }, [hasActivePaidInvoice]);
 
-  // Dynamic Company Logo App Icon & Favicon Engine
-  // Automatically adapts uploaded company logo into PWA-compliant icons
+  // Dynamic Favicon Update Only (No Manifest Override - Keeps PWA Intact)
   useEffect(() => {
-    applyCompanyLogoAsAppIcon(settings.companyLogo);
+    if (settings.companyLogo) {
+      // Update standard Favicon
+      const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      link.type = 'image/x-icon';
+      link.rel = 'shortcut icon';
+      link.href = settings.companyLogo;
+      document.getElementsByTagName('head')[0].appendChild(link);
+
+      // Update Apple Touch Icon
+      const appleLink: HTMLLinkElement = document.querySelector("link[rel='apple-touch-icon']") || document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      appleLink.href = settings.companyLogo;
+      document.getElementsByTagName('head')[0].appendChild(appleLink);
+    }
   }, [settings.companyLogo]);
 
   useEffect(() => {
@@ -636,7 +648,8 @@ const App = () => {
   if (!currentUser) {
       return (
           <>
-            <InstallPwaPrompt logoUrl={settings.companyLogo} companyName={settings.companyName} />
+            <UpdateBanner />
+            <InstallPwaPrompt />
             <UpdatePrompt />
             <AppBadge notifications={notifications} />
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -651,6 +664,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 relative">
+      <UpdateBanner />
       <UpdatePrompt />
       <AppBadge notifications={notifications} />
       <WhatsNewModal />
