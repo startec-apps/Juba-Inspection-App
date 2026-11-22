@@ -197,8 +197,13 @@ export interface InvoiceRecord {
     taxAmount: number;
     total: number;
     status: InvoiceStatus;
+    validFrom?: string;
+    validUntil?: string;
+    validityDays?: number;
+    validityLabel?: string;
     notes?: string;
     paidAt?: string;
+    paidBy?: string;
     createdBy: string;
     createdAt: string;
     updatedAt: string;

@@ -168,8 +168,13 @@
         "taxAmount": { "type": "number", "description": "Calculated tax amount" },
         "total": { "type": "number", "description": "Final invoice total due" },
         "status": { "type": "string", "enum": ["Draft", "Pending", "Paid", "Overdue", "Cancelled"], "description": "Invoice payment status" },
+        "validFrom": { "type": "string", "description": "Rental/license coverage start date (YYYY-MM-DD)" },
+        "validUntil": { "type": "string", "description": "Rental/license coverage expiration date (YYYY-MM-DD)" },
+        "validityDays": { "type": "number", "description": "Total number of days covered by this invoice" },
+        "validityLabel": { "type": "string", "description": "Human-readable rental validity plan label" },
         "notes": { "type": "string", "description": "Invoice remarks or payment instructions" },
         "paidAt": { "type": "string", "description": "Timestamp when invoice was settled" },
+        "paidBy": { "type": "string", "description": "SuperAdmin user who confirmed invoice payment" },
         "createdBy": { "type": "string", "description": "Administrator who created the invoice" },
         "createdAt": { "type": "string", "description": "Creation timestamp" },
         "updatedAt": { "type": "string", "description": "Last modification timestamp" }
