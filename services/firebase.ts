@@ -1161,6 +1161,116 @@ export async function addCommentToSupportTicketInFirebase(ticketId: string, comm
 // 8. INVOICES (Admin Billing Ledger)
 // ==========================================
 
+export function getLocalIsoDate(date: Date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function diffCalendarDays(fromIso: string, toIso: string): number | null {
+    if (!fromIso || !toIso) return null;
+    const a = new Date(`${fromIso.slice(0, 10)}T00:00:00Z`).getTime();
+    const b = new Date(`${toIso.slice(0, 10)}T00:00:00Z`).getTime();
+    if (isNaN(a) || isNaN(b)) return null;
+    return Math.round((b - a) / 86400000);
+}
+
+export function isPaidInvoiceCurrentlyValid(inv: InvoiceRecord, todayStr: string = getLocalIsoDate()): boolean {
+    if (!inv || inv.status !== 'Paid') return false;
+    if (inv.validFrom && inv.validFrom > todayStr) return false;
+    if (inv.validUntil && inv.validUntil < todayStr) return false;
+    return true;
+}
+
+export function getActivePaidInvoice(invoices: InvoiceRecord[]): InvoiceRecord | null {
+    if (!Array.isArray(invoices) || invoices.length === 0) return null;
+    const todayStr = getLocalIsoDate();
+    const validPaid = invoices.filter(inv => isPaidInvoiceCurrentlyValid(inv, todayStr));
+    if (validPaid.length === 0) return null;
+    validPaid.sort((a, b) => {
+        const expA = a.validUntil || '9999-12-31';
+        const expB = b.validUntil || '9999-12-31';
+        return expB.localeCompare(expA);
+    });
+    return validPaid[0];
+}
+
+export interface SubscriptionSummary {
+    isActive: boolean;
+    state: 'active' | 'expiring_soon' | 'expired' | 'payment_due' | 'unlicensed';
+    activeInvoice: InvoiceRecord | null;
+    outstandingInvoice: InvoiceRecord | null;
+    latestExpiredInvoice: InvoiceRecord | null;
+    validFrom: string | null;
+    validUntil: string | null;
+    daysRemaining: number | null;
+}
+
+export function getSubscriptionSummary(invoices: InvoiceRecord[]): SubscriptionSummary {
+    const list = Array.isArray(invoices) ? invoices : [];
+    const todayStr = getLocalIsoDate();
+    const activeInvoice = getActivePaidInvoice(list);
+
+    if (activeInvoice) {
+        const daysRemaining = activeInvoice.validUntil
+            ? diffCalendarDays(todayStr, activeInvoice.validUntil)
+            : null;
+        const isExpiringSoon = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 5;
+        return {
+            isActive: true,
+            state: isExpiringSoon ? 'expiring_soon' : 'active',
+            activeInvoice,
+            outstandingInvoice: null,
+            latestExpiredInvoice: null,
+            validFrom: activeInvoice.validFrom || null,
+            validUntil: activeInvoice.validUntil || null,
+            daysRemaining
+        };
+    }
+
+    const overdue = list.find(inv => inv.status === 'Overdue' || (inv.status === 'Pending' && inv.dueDate && inv.dueDate < todayStr));
+    const pending = list.find(inv => inv.status === 'Pending');
+    const outstandingInvoice = overdue || pending || null;
+
+    const expiredPaid = list
+        .filter(inv => inv.status === 'Paid' && inv.validUntil && inv.validUntil < todayStr)
+        .sort((a, b) => (b.validUntil || '').localeCompare(a.validUntil || ''));
+    const latestExpiredInvoice = expiredPaid[0] || null;
+
+    const state: SubscriptionSummary['state'] = outstandingInvoice
+        ? 'payment_due'
+        : latestExpiredInvoice
+            ? 'expired'
+            : 'unlicensed';
+
+    return {
+        isActive: false,
+        state,
+        activeInvoice: null,
+        outstandingInvoice,
+        latestExpiredInvoice,
+        validFrom: latestExpiredInvoice?.validFrom || null,
+        validUntil: latestExpiredInvoice?.validUntil || null,
+        daysRemaining: null
+    };
+}
+
+export function getCachedInvoicesSync(): InvoiceRecord[] {
+    const cached = getPersistentCache<InvoiceRecord[]>('invoices_list', 30 * 24 * 60 * 60 * 1000);
+    return Array.isArray(cached) ? cached : [];
+}
+
+export function hasPaidInvoice(invoices: InvoiceRecord[]): boolean {
+    return getActivePaidInvoice(invoices) !== null;
+}
+
+function emitInvoicesUpdated(invoices: InvoiceRecord[]) {
+    try {
+        window.dispatchEvent(new CustomEvent('sc_invoices_updated', { detail: invoices }));
+    } catch {}
+}
+
 export async function getInvoicesFromFirebase(forceRefresh: boolean = false): Promise<InvoiceRecord[]> {
     const cacheKey = 'invoices_list';
     if (!forceRefresh) {
@@ -1190,6 +1300,7 @@ export async function getInvoicesFromFirebase(forceRefresh: boolean = false): Pr
 
             invoices.sort((a, b) => new Date(b.createdAt || b.issueDate || 0).getTime() - new Date(a.createdAt || a.issueDate || 0).getTime());
             setPersistentCache(cacheKey, invoices);
+            emitInvoicesUpdated(invoices);
             return invoices;
         } catch (error: any) {
             if (isQuotaError(error)) {
@@ -1207,15 +1318,47 @@ export async function getInvoicesFromFirebase(forceRefresh: boolean = false): Pr
     return fetchPromise;
 }
 
-export async function saveInvoiceToFirebase(invoice: InvoiceRecord): Promise<{ success: boolean; id: string }> {
+function sanitizeForFirestore<T>(value: T): T {
+    if (Array.isArray(value)) {
+        return value.map(item => sanitizeForFirestore(item)) as unknown as T;
+    }
+    if (value !== null && typeof value === 'object') {
+        const cleanObj: Record<string, any> = {};
+        Object.keys(value as Record<string, any>).forEach(k => {
+            const v = (value as Record<string, any>)[k];
+            if (v !== undefined && !(typeof v === 'number' && Number.isNaN(v))) {
+                cleanObj[k] = sanitizeForFirestore(v);
+            }
+        });
+        return cleanObj as T;
+    }
+    return value;
+}
+
+export async function saveInvoiceToFirebase(
+    invoice: InvoiceRecord
+): Promise<{ success: boolean; id: string; firebaseSynced: boolean; error?: string }> {
     const id = invoice.id || `INV-${Date.now()}`;
     const now = new Date().toISOString();
-    const payload: InvoiceRecord = {
+
+    const subtotal = +(Number(invoice.subtotal || 0)).toFixed(2);
+    const discountAmount = +(Math.max(0, Number(invoice.discountAmount || 0))).toFixed(2);
+    const taxRate = +(Math.max(0, Number(invoice.taxRate || 0))).toFixed(2);
+    const taxableBase = Math.max(0, subtotal - discountAmount);
+    const taxAmount = +(taxableBase * (taxRate / 100)).toFixed(2);
+    const total = +(taxableBase + taxAmount).toFixed(2);
+
+    const payload = sanitizeForFirestore<InvoiceRecord>({
         ...invoice,
         id,
+        subtotal,
+        discountAmount,
+        taxRate,
+        taxAmount,
+        total,
         createdAt: invoice.createdAt || now,
         updatedAt: now
-    };
+    });
 
     // Update persistent cache optimistically so offline / quota mode works seamlessly
     const existing = getPersistentCache<InvoiceRecord[]>('invoices_list', 30 * 24 * 60 * 60 * 1000) || [];
@@ -1224,22 +1367,30 @@ export async function saveInvoiceToFirebase(invoice: InvoiceRecord): Promise<{ s
         ? existing.map(inv => (inv.id === id ? payload : inv))
         : [payload, ...existing];
     setPersistentCache('invoices_list', updatedList);
-
-    if (isFirestoreQuotaExceeded()) {
-        return { success: true, id };
-    }
+    emitInvoicesUpdated(updatedList);
 
     try {
         const docRef = doc(db, 'invoices', id);
         await setDoc(docRef, payload, { merge: true });
-        return { success: true, id };
+        recordFirebaseSync();
+        return { success: true, id, firebaseSynced: true };
     } catch (error: any) {
         if (isQuotaError(error)) {
             markFirestoreQuotaExceeded();
-            return { success: true, id };
+            return {
+                success: true,
+                id,
+                firebaseSynced: false,
+                error: 'Firestore daily quota reached; saved locally.'
+            };
         }
-        console.warn("Firebase saveInvoice notice:", error?.message || error);
-        return { success: false, id };
+        console.error("Firebase saveInvoice error:", error);
+        return {
+            success: false,
+            id,
+            firebaseSynced: false,
+            error: error?.message || 'Failed to save invoice to Firebase database.'
+        };
     }
 }
 
@@ -1247,7 +1398,9 @@ export async function deleteInvoiceFromFirebase(invoiceId: string): Promise<bool
     if (!invoiceId) return false;
 
     const existing = getPersistentCache<InvoiceRecord[]>('invoices_list', 30 * 24 * 60 * 60 * 1000) || [];
-    setPersistentCache('invoices_list', existing.filter(inv => inv.id !== invoiceId));
+    const updatedList = existing.filter(inv => inv.id !== invoiceId);
+    setPersistentCache('invoices_list', updatedList);
+    emitInvoicesUpdated(updatedList);
 
     if (isFirestoreQuotaExceeded()) {
         return true;
@@ -1262,7 +1415,7 @@ export async function deleteInvoiceFromFirebase(invoiceId: string): Promise<bool
             return true;
         }
         console.warn("Firebase deleteInvoice notice:", error?.message || error);
-        return false;
+        return true;
     }
 }
 

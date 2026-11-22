@@ -15,6 +15,7 @@ interface PetroleumV2DashboardProps {
     onPrint: (item: InspectionData) => void;
     userRole?: string;
     isLocked?: boolean;
+    onOpenInvoicing?: () => void;
 }
 
 const PetroleumV2Dashboard: React.FC<PetroleumV2DashboardProps> = (props) => {

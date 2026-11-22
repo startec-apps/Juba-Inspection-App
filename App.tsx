@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { INITIAL_DATA, InspectionData, User } from './types';
+import { INITIAL_DATA, InspectionData, User, InvoiceRecord } from './types';
 import { 
     PRE_CONFIGURED_SCRIPT_URL,
     SHEET_HEADERS, PETROLEUM_V2_HEADERS, ACID_HEADERS,
@@ -24,8 +24,12 @@ import {
     updateRequestStatusInFirebase,
     recordSheetSync,
     getBackupSyncStats,
-    syncFirestoreToSpreadsheet
+    syncFirestoreToSpreadsheet,
+    getInvoicesFromFirebase,
+    getCachedInvoicesSync,
+    getSubscriptionSummary
 } from './services/firebase';
+import { applyCompanyLogoAsAppIcon } from './lib/iconUtils';
 
 // UI Components
 import Toast from './components/ui/Toast';
@@ -33,11 +37,11 @@ import SubmissionOverlay from './components/ui/SubmissionOverlay';
 import SystemTour from './components/ui/SystemTour'; 
 import InstallPwaPrompt from './components/ui/InstallPwaPrompt';
 import UpdatePrompt from './components/ui/UpdatePrompt';
-import UpdateBanner from './components/ui/UpdateBanner';
 import AppBadge from './components/ui/AppBadge';
 import WhatsNewModal from './components/ui/WhatsNewModal';
 import VersionTag from './components/ui/VersionTag';
 import OnboardingWizard from './components/ui/OnboardingWizard'; 
+import BillingStatusNotice from './components/ui/BillingStatusNotice';
 
 // Layout Components
 import AppHeader from './components/layout/AppHeader';
@@ -78,6 +82,9 @@ const App = () => {
   const [supportPrefill, setSupportPrefill] = useState<{subject: string, description: string} | null>(null);
   const [pendingModule, setPendingModule] = useState<string | null>(null);
   const [hasExistingDraft, setHasExistingDraft] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'app' | 'invoicing' | 'backend'>('app');
+  const [invoices, setInvoices] = useState<InvoiceRecord[]>(() => getCachedInvoicesSync());
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
   
   const effectiveScriptUrl = (PRE_CONFIGURED_SCRIPT_URL || appScriptUrl || settings?.backupSpreadsheetUrl || '').trim();
 
@@ -101,28 +108,47 @@ const App = () => {
     appScriptUrl: effectiveScriptUrl,
   });
 
-  const isSystemLocked = false;
+  const subscriptionSummary = getSubscriptionSummary(invoices);
+  const hasActivePaidInvoice = subscriptionSummary.isActive;
+  const isSystemLocked = !hasActivePaidInvoice;
 
   useEffect(() => {
-    (window as any).isSubscriptionLocked = false;
-  }, []);
+    let mounted = true;
+    const syncInvoices = async () => {
+      try {
+        const latest = await getInvoicesFromFirebase(false);
+        if (mounted) {
+          setInvoices(latest);
+          setInvoicesLoaded(true);
+        }
+      } catch {
+        if (mounted) setInvoicesLoaded(true);
+      }
+    };
+    syncInvoices();
 
-  // Dynamic Favicon Update Only (No Manifest Override - Keeps PWA Intact)
+    const handleInvoicesUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<InvoiceRecord[]>).detail;
+      if (Array.isArray(detail)) {
+        setInvoices(detail);
+        setInvoicesLoaded(true);
+      }
+    };
+    window.addEventListener('sc_invoices_updated', handleInvoicesUpdated);
+    return () => {
+      mounted = false;
+      window.removeEventListener('sc_invoices_updated', handleInvoicesUpdated);
+    };
+  }, [currentUser?.username]);
+
   useEffect(() => {
-    if (settings.companyLogo) {
-      // Update standard Favicon
-      const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = settings.companyLogo;
-      document.getElementsByTagName('head')[0].appendChild(link);
+    (window as any).isSubscriptionLocked = !hasActivePaidInvoice;
+  }, [hasActivePaidInvoice]);
 
-      // Update Apple Touch Icon
-      const appleLink: HTMLLinkElement = document.querySelector("link[rel='apple-touch-icon']") || document.createElement('link');
-      appleLink.rel = 'apple-touch-icon';
-      appleLink.href = settings.companyLogo;
-      document.getElementsByTagName('head')[0].appendChild(appleLink);
-    }
+  // Dynamic Company Logo App Icon & Favicon Engine
+  // Automatically adapts uploaded company logo into PWA-compliant icons
+  useEffect(() => {
+    applyCompanyLogoAsAppIcon(settings.companyLogo);
   }, [settings.companyLogo]);
 
   useEffect(() => {
@@ -173,6 +199,30 @@ const App = () => {
     };
   }, [effectiveScriptUrl, settings.cloudBackupSync, currentUser?.role]);
 
+  const notifyPaidInvoiceRequired = () => {
+      const clean = String(currentUser?.role || '').trim().toLowerCase();
+      const isSuper = clean === 'superadmin' || clean === 'super admin';
+      const isAdminRole = isSuper || clean === 'admin';
+      showToast(
+        isSuper
+          ? "Payment due: Confirm an invoice as Paid in Settings → Invoicing to restore inspection creation."
+          : isAdminRole
+            ? "Payment due: Issue a rental invoice in Settings → Invoicing; SuperAdmin payment confirmation unlocks inspections."
+            : "Payment due: New inspections are paused until an active rental invoice is confirmed Paid by SuperAdmin.",
+        "warning"
+      );
+  };
+
+  const handleOpenInvoicing = () => {
+      if (!isCurrentUserAdmin) {
+          showToast("Access restricted: Only Administrators can open Invoicing.", "error");
+          return;
+      }
+      setSettingsInitialTab('invoicing');
+      setActiveModule('settings');
+      setViewMode('dashboard');
+  };
+
   const handleNavigate = async (module: string) => {
     if (module.startsWith('support:info:')) {
         const solutionName = module.replace('support:info:', '');
@@ -187,6 +237,10 @@ const App = () => {
     }
 
     if (module.startsWith('request:start_inspection')) {
+        if (!hasActivePaidInvoice) {
+            notifyPaidInvoiceRequired();
+            return;
+        }
         const parts = module.split('|');
         const type = parts[1]?.toLowerCase();
         const truck = parts[2];
@@ -208,6 +262,7 @@ const App = () => {
     }
 
     if (module !== 'support') setSupportPrefill(null);
+    if (module === 'settings') setSettingsInitialTab('app');
     setActiveModule(module);
     setViewMode('dashboard');
   };
@@ -217,6 +272,10 @@ const App = () => {
   }, [handleNavigate]);
 
   const handleOpenInspectionFlow = (module: string) => {
+    if (!hasActivePaidInvoice) {
+        notifyPaidInvoiceRequired();
+        return;
+    }
     const draftKey = `sc_draft_${module}`;
     const draft = localStorage.getItem(draftKey);
     if (draft) {
@@ -231,6 +290,10 @@ const App = () => {
   const { notifications, handleMarkNotificationRead, handleDismissNotification, handleClearAllNotifications, handleGlobalAcknowledge } = useNotifications(effectiveScriptUrl, currentUser, showToast);
 
   const startFreshInspection = (module: string, prefill?: Partial<InspectionData>) => {
+      if (!hasActivePaidInvoice) {
+          notifyPaidInvoiceRequired();
+          return;
+      }
       setLastSubmittedData(null);
       setAiAnalysisResult(null);
       setFormInitialData({ ...INITIAL_DATA, timestamp: new Date().toISOString(), inspectedBy: currentUser?.name || '', ...prefill });
@@ -238,6 +301,11 @@ const App = () => {
   };
 
   const handleResumeDraft = () => {
+    if (!hasActivePaidInvoice) {
+        setIsStartModalOpen(false);
+        notifyPaidInvoiceRequired();
+        return;
+    }
     if (!pendingModule) return;
     const draftKey = `sc_draft_${pendingModule}`;
     const draftData = localStorage.getItem(draftKey);
@@ -250,6 +318,11 @@ const App = () => {
   };
 
   const handleDiscardAndStartNew = () => {
+    if (!hasActivePaidInvoice) {
+        setIsStartModalOpen(false);
+        notifyPaidInvoiceRequired();
+        return;
+    }
     if (!pendingModule) return;
     localStorage.removeItem(`sc_draft_${pendingModule}`);
     setActiveModule(pendingModule);
@@ -316,6 +389,12 @@ const App = () => {
   };
 
   const handleGoogleSheetSubmit = async (rawFormData: InspectionData) => {
+    if (!rawFormData.id && !hasActivePaidInvoice) {
+        setSubmissionStatus('idle');
+        notifyPaidInvoiceRequired();
+        setViewMode('dashboard');
+        return;
+    }
     setSubmissionStatus('submitting');
     
     // Disable picture uploading for all modules temporarily: zero out all photo fields
@@ -557,8 +636,7 @@ const App = () => {
   if (!currentUser) {
       return (
           <>
-            <UpdateBanner />
-            <InstallPwaPrompt />
+            <InstallPwaPrompt logoUrl={settings.companyLogo} companyName={settings.companyName} />
             <UpdatePrompt />
             <AppBadge notifications={notifications} />
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -573,7 +651,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 relative">
-      <UpdateBanner />
       <UpdatePrompt />
       <AppBadge notifications={notifications} />
       <WhatsNewModal />
@@ -613,11 +690,22 @@ const App = () => {
           />
 
           <main className="flex-1 p-2 sm:p-4 md:p-6 w-full max-w-7xl mx-auto no-print overflow-x-hidden">
+              {viewMode === 'dashboard' && (
+                  <BillingStatusNotice
+                    subscription={subscriptionSummary}
+                    invoicesLoaded={invoicesLoaded}
+                    userRole={currentUser.role}
+                    activeModule={activeModule}
+                    onOpenInvoicing={isCurrentUserAdmin ? handleOpenInvoicing : undefined}
+                  />
+              )}
               <AppContent 
                 viewMode={viewMode} activeModule={activeModule} currentUser={currentUser} settings={settings}
                 appScriptUrl={effectiveScriptUrl || appScriptUrl} historyList={historyList} isLoadingHistory={isLoadingHistory}
                 validationLists={validationLists} stats={stats} notifications={notifications}
-                isSystemLocked={isSystemLocked} formInitialData={formInitialData}
+                isSystemLocked={isSystemLocked} hasPaidInvoice={hasActivePaidInvoice} invoicesLoaded={invoicesLoaded}
+                settingsInitialTab={settingsInitialTab} onOpenInvoicing={handleOpenInvoicing}
+                formInitialData={formInitialData}
                 submissionStatus={submissionStatus} supportPrefill={supportPrefill}
                 handleOpenInspectionFlow={handleOpenInspectionFlow} handleSaveDraft={handleSaveDraft}
                 handleExitForm={handleExitForm} handleGoogleSheetSubmit={handleGoogleSheetSubmit}

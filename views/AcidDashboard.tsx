@@ -15,6 +15,7 @@ interface AcidDashboardProps {
     onPrint: (item: InspectionData) => void;
     userRole?: string;
     isLocked?: boolean;
+    onOpenInvoicing?: () => void;
 }
 
 const AcidDashboard: React.FC<AcidDashboardProps> = (props) => {

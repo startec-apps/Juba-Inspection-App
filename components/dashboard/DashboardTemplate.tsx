@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { InspectionData } from '../../types';
 import HistoryView from '../../views/HistoryView';
-import { CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Plus, Calendar, Activity } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Plus, Calendar, Activity, Lock } from 'lucide-react';
 
 interface DashboardTemplateProps {
     title: string;
@@ -21,6 +21,7 @@ interface DashboardTemplateProps {
     userRole?: string;
     titlePrefix?: string;
     isLocked?: boolean;
+    onOpenInvoicing?: () => void;
     docNo?: string;
     moduleKey?: string;
 }
@@ -41,12 +42,14 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
     onDeleteRecord,
     userRole,
     isLocked = false,
+    onOpenInvoicing,
     docNo = 'MNT-F-015',
     moduleKey = 'general'
 }) => {
     const cleanRole = String(userRole || '').trim().toLowerCase();
     const isUserAdmin = cleanRole === 'admin' || cleanRole === 'superadmin' || cleanRole === 'super admin';
-    const canCreate = (isUserAdmin || cleanRole === 'inspector') && !isLocked;
+    const canCreateRole = isUserAdmin || cleanRole === 'inspector';
+    const canCreate = canCreateRole && !isLocked;
 
     // Real computed module analytics
     const metrics = useMemo(() => {
@@ -159,7 +162,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
 
                 {/* Primary Action Buttons: Compact, Touch-Optimized */}
                 <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                    {canCreate && (
+                    {canCreate ? (
                         <button
                             type="button"
                             onClick={startNewInspection}
@@ -168,7 +171,17 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
                             <Plus size={15} strokeWidth={2.5} />
                             <span>New Inspection</span>
                         </button>
-                    )}
+                    ) : canCreateRole && isLocked ? (
+                        <button
+                            type="button"
+                            onClick={onOpenInvoicing || startNewInspection}
+                            className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 whitespace-nowrap"
+                            title="Payment due: Active paid rental invoice required to create inspections"
+                        >
+                            <Lock size={14} strokeWidth={2.4} />
+                            <span>{onOpenInvoicing ? 'Payment Due · Invoicing' : 'Payment Due · Paused'}</span>
+                        </button>
+                    ) : null}
                     <button
                         type="button"
                         onClick={() => fetchHistory(true)}

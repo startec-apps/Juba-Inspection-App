@@ -10,6 +10,9 @@ interface OverviewDashboardProps {
     onViewReport: (item: InspectionData) => void;
     pendingAlertsCount?: number;
     isLocked?: boolean; 
+    hasPaidInvoice?: boolean;
+    invoicesLoaded?: boolean;
+    onOpenInvoicing?: () => void;
     settings: SystemSettings;
 }
 
@@ -167,22 +170,23 @@ const SectionHeader = ({ label, badge }: { label: string, badge?: React.ReactNod
 );
 
 const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ 
-    onNavigate, userRole, isLocked = false, pendingAlertsCount = 0,
+    onNavigate, userRole, isLocked = false, hasPaidInvoice = true, invoicesLoaded = true, onOpenInvoicing, pendingAlertsCount = 0,
     historyList = [], isLoading = false, onViewReport, settings
 }) => {
     const isAdmin = userRole === 'Admin' || userRole === 'SuperAdmin';
     const isEnabled = (modId: string) => settings.enabledModules?.[modId] !== false;
+    const creationLocked = invoicesLoaded && !hasPaidInvoice;
 
     return (
-        <div className="max-w-3xl mx-auto py-3 sm:py-6 px-2 sm:px-4 w-full min-h-[calc(100dvh-11rem)] flex flex-col justify-center overflow-x-hidden">
-            <div className="space-y-6 sm:space-y-8 w-full">
+        <div className={`max-w-3xl mx-auto py-3 sm:py-6 px-2 sm:px-4 w-full flex flex-col justify-center overflow-x-hidden ${creationLocked ? 'min-h-[calc(100dvh-16rem)]' : 'min-h-[calc(100dvh-11rem)]'}`}>
+            <div className="space-y-5 sm:space-y-7 w-full">
                 {/* 1. Core Inspection Modules */}
                 <section id="inspection-forms-section" className="animate-fadeIn">
                     <SectionHeader label="Audit & Inspection Registries" />
                     <div className="flex flex-wrap items-stretch justify-center gap-2.5 sm:gap-4">
-                        {isEnabled('general') && <LauncherTile id="general" label="General Inspection" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<GeneralAuditIcon />} />}
-                        {isEnabled('petroleum_v2') && <LauncherTile id="petroleum_v2" label="Petroleum Tanker" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<PetroleumAuditIcon />} />}
-                        {isEnabled('acid') && <LauncherTile id="acid" label="Acid Tanker" isInspectionModule={true} isLocked={isLocked} onNavigate={onNavigate} icon={<AcidAuditIcon />} />}
+                        {isEnabled('general') && <LauncherTile id="general" label="General Inspection" isInspectionModule={false} isLocked={false} onNavigate={onNavigate} icon={<GeneralAuditIcon />} />}
+                        {isEnabled('petroleum_v2') && <LauncherTile id="petroleum_v2" label="Petroleum Tanker" isInspectionModule={false} isLocked={false} onNavigate={onNavigate} icon={<PetroleumAuditIcon />} />}
+                        {isEnabled('acid') && <LauncherTile id="acid" label="Acid Tanker" isInspectionModule={false} isLocked={false} onNavigate={onNavigate} icon={<AcidAuditIcon />} />}
                     </div>
                 </section>
 

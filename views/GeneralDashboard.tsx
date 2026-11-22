@@ -15,6 +15,7 @@ interface GeneralDashboardProps {
     onPrint: (item: InspectionData) => void;
     userRole?: string;
     isLocked?: boolean;
+    onOpenInvoicing?: () => void;
 }
 
 const GeneralDashboard: React.FC<GeneralDashboardProps> = (props) => {
