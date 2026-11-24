@@ -7,7 +7,7 @@
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
-    "deploy": "npm run build && rmdir /s /q docs 2>nul & xcopy dist docs /E /I /Y & git add docs & git commit -m \"Deploy update\" & git push"
+    "deploy": "npm run build && rmdir /s /q docs 2>nul & xcopy dist docs /E /I /Y & copy /Y public\\CNAME docs\\CNAME & copy /Y public\\.nojekyll docs\\.nojekyll & git add docs & git commit -m \"Deploy update\" & git push"
   },
   "dependencies": {
     "@google/genai": "^1.31.0",
